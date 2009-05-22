@@ -21,12 +21,13 @@ sub new {
     my $opts = shift || {};
     my $memc = delete $opts->{memc};
     my $servers = delete $opts->{servers};
-    if (!$memc) {
+    if (!defined $memc) {
         if ($servers) {
             if (!@$servers) {
                 die "Empty servers given.\n";
             }
-            my $memc = memcached_create();
+            $memc = memcached_create();
+            #warn "memc: $memc";
             for my $server (@$servers) {
                 my ($host, $port) = split /:/, $server;
                 if (!defined $port) {
@@ -35,7 +36,7 @@ sub new {
                 if ($port !~ /^\d+$/) {
                     die "Invalid port number \"$port\" in server $server\n";
                 }
-                memcached_server_add($memc, $server, $port);
+                memcached_server_add($memc, $host, $port);
             }
         } else {
             die "Neither memc nor servers specified.\n";
@@ -50,6 +51,7 @@ sub new {
     if (%$opts) {
         die "Unrecognized option names: ", join(' ', keys %$opts), "\n";
     }
+    #warn "memc: $memc";
     return bless {
         memc      => $memc,
         queue     => $queue,
@@ -60,7 +62,7 @@ sub new {
     }, $class;
 }
 
-sub push {
+sub push_elem {
     my ($self, $elem) = @_;
     my $task_json = $JsonXs->encode($elem);
     my $queue = $self->{queue};
@@ -102,7 +104,7 @@ sub write_buf_elem_count {
     $_[0]->{write_buf_elem_count};
 }
 
-sub shift {
+sub shift_elem {
     my $self = shift;
 
 }
@@ -130,11 +132,11 @@ Queue::Memcached::Buffered - buffered queue API with read/write buffers
         queue => 'queue_name',
     });
     for my $elem (@elems) {
-        $queue->push($elem);
+        $queue->push_elem($elem);
     }
     $queue->flush; # don't forget this!
 
-    while (my $elem = $queue->shift) {
+    while (my $elem = $queue->shift_elem) {
         # do something with $elem here...
     }
 

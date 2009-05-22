@@ -11,8 +11,8 @@ all_from            ('lib/Queue/Memcached/Buffered.pm');
 requires            ('FindBin');
 requires            ('Memcached::libmemcached' => '0.2101');
 
-build_requires            ('Test::Base');
 build_requires            ('Test::More');
+build_requires            ('Test::MockObject');
 
 #install_script('bin/prefetcher.pl');
 #install_script('bin/cluster-prefetcher.pl');
