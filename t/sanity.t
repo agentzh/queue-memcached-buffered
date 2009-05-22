@@ -171,6 +171,8 @@ is $queue->{write_buf}, '["'.('a'x49).'"', 'buf cleared';
 
 #warn "$_ => $flush\n";
 
+
+
 package Queue::Memcached::Buffered;
 
 sub memcached_create {

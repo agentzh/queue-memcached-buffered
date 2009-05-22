@@ -68,23 +68,23 @@ sub new {
 
 sub push_elem {
     my ($self, $elem) = @_;
-    my $task_json = $JsonXs->encode($elem);
-    if (length($task_json) + 2 > $self->{item_size}) {
-        die "single task too big: $task_json\n";
+    my $elem_json = $JsonXs->encode($elem);
+    if (length($elem_json) + 2 > $self->{item_size}) {
+        die "single task too big: $elem_json\n";
     }
 
     my $queue = $self->{queue};
     my $flushed = 0;
-    if (length($queue) + length($task_json) + length($self->{write_buf}) + 1
+    if (length($queue) + length($elem_json) + length($self->{write_buf}) + 1
             > $self->{item_size}) { # clear the buffer
         $flushed = $self->flush;
-        $self->{write_buf} = '[' . $task_json;
+        $self->{write_buf} = '[' . $elem_json;
         return $flushed;
     }
     if ($self->{write_buf} eq '') {
-        $self->{write_buf} = '[' . $task_json;
+        $self->{write_buf} = '[' . $elem_json;
     } else {
-        $self->{write_buf} .= ',' . $task_json;
+        $self->{write_buf} .= ',' . $elem_json;
     }
     $self->{write_buf_elem_count}++;
     return $flushed;
@@ -101,7 +101,7 @@ sub flush {
     ## len: length($tasks_json)
     ## $tasks_json
     memcached_set($memc, $queue, $self->{write_buf}) or
-        die "line $.: Failed to add item to $queue: ", $memc->errstr, "\n";
+        die "failed to add item to $queue: ", $memc->errstr, "\n";
     $self->{write_buf_elem_count} = 0;
     $self->{write_buf} = '';
     return 1;
@@ -113,7 +113,26 @@ sub write_buf_elem_count {
 
 sub shift_elem {
     my $self = shift;
-
+    my $buf = $self->{read_buf};
+    if (@$buf) {
+        return shift @$buf;
+    }
+    my $queue = $self->{queue};
+    my $memc = $self->{memc};
+    my $elem_list_json = memcached_get($memc, $queue) or
+        die "failed to read item from $queue: ", $memc->errstr, "\n";
+    my $elem_list;
+    eval {
+        $elem_list = $JsonXs->decode($elem_list_json);
+    };
+    if ($@) {
+        die "failed to parse json $elem_list_json: $@\n";
+    }
+    if (!defined $elem_list || !ref $elem_list || ref $elem_list ne 'ARRAY') {
+        die "invalid array returned from the server: $elem_list_json\n";
+    }
+    $self->{read_buf} = $elem_list;
+    return shift @$elem_list;
 }
 
 sub DESTORY {
