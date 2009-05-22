@@ -166,6 +166,31 @@ Queue::Memcached::Buffered - buffered queue API with read/write buffers
         # do something with $elem here...
     }
 
+=head1 DIAGNOSTICS
+
+Queue::Memcached::Buffered throw exceptions when error occurs. Here's the list of the common error messages:
+
+=over
+
+=item failed to add item to <queue>: <memcached errstr>
+
+The C<push_elem> method fails to push the JSON item to the remote memcached queue server. The raw error messages would be given at the end.
+
+=item failed to read item from <queue>: <memcached errstr>
+
+The C<shift_elem> method fails to get a defined and non-empty JSON item from the remote memcached queue server. The raw error messages would be given at the end.
+
+=item failed to parse JSON <json_string>: <errors from JSON::XS>
+
+The server returns invalid JSON item and the C<shift_elem> method cannot parse it with L<JSON::XS>. The original error messages from L<JSON::XS> is given at the end.
+
+=item invalid array returned from the server: <json string>
+
+The memcached queue server returns a valid JSON string but it's not a JSON array as a whole, but JSON object, strings, numerals, or booleans.
+
+
+=back
+
 =head1 AUTHOR
 
 Agent Zhang (agentzh) C<< <agentzh@yahoo.cn> >>
