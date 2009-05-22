@@ -3,10 +3,11 @@ use strict;
 use warnings;
 
 #use Smart::Comments::JSON '##';
-use Test::More tests => 46;
+use Test::More tests => 73;
 use Test::MockObject;
 
 our @MockStack;
+our @Queue;
 
 my $mock = Test::MockObject->new;
 
@@ -170,8 +171,99 @@ is $flushed, 1;
 is $queue->{write_buf}, '["'.('a'x49).'"', 'buf cleared';
 
 #warn "$_ => $flush\n";
+@Queue = ();
+my $elem;
+eval {
+    $elem = $queue->shift_elem;
+};
+is $@, "failed to read item from blah: foo\n", 'queue empty';
 
+eval {
+    $elem = $queue->shift_elem;
+};
+is $@, "failed to read item from blah: foo\n", 'queue empty';
 
+@Queue = ('blah');
+eval {
+    $elem = $queue->shift_elem;
+};
+like $@, qr/^failed to parse json blah: malformed JSON string,/, 'invalid JSON';
+
+@Queue = ('"hello"', '{"cat":32}', 'null');
+eval {
+    $elem = $queue->shift_elem;
+};
+is $@, "invalid array returned from the server: \"hello\"\n", 'bad element: strings';
+
+eval {
+    $elem = $queue->shift_elem;
+};
+is $@, qq/invalid array returned from the server: {"cat":32}\n/, 'bad element: hash refs';
+
+eval {
+    $elem = $queue->shift_elem;
+};
+is $@, qq/invalid array returned from the server: null\n/, 'bad element: nulls';
+
+@MockStack = ();
+
+@Queue = ('["hello",32]', '[null]', '[{"dog":56}]');
+eval {
+    $elem = $queue->shift_elem;
+};
+is $@, '', 'no exception thrown';
+is $elem, 'hello', '1st elem successfully read';
+is scalar(@MockStack), 1, 'one access to memc';
+$call = shift @MockStack;
+is "@$call", 'memcached_get memc blah', 'get the first bulk';
+@MockStack = ();
+
+eval {
+    $elem = $queue->shift_elem;
+};
+is $@, '', 'no exception thrown';
+is $elem, 32, '2nd elem successfully read';
+is scalar(@MockStack), 0, 'no access to memc';
+@MockStack = ();
+
+eval {
+    $elem = $queue->shift_elem;
+};
+is $@, '', 'no exception thrown';
+is $elem, undef, '3rd elem successfully read';
+is scalar(@MockStack), 1, 'one access to memc';
+$call = shift @MockStack;
+is "@$call", 'memcached_get memc blah', 'get the first bulk';
+@MockStack = ();
+
+eval {
+    $elem = $queue->shift_elem;
+};
+is $@, '', 'no exception thrown';
+is_deeply $elem, {dog => 56}, '4th elem successfully read';
+is scalar(@MockStack), 1, 'one access to memc';
+$call = shift @MockStack;
+is "@$call", 'memcached_get memc blah', 'get the first bulk';
+@MockStack = ();
+
+eval {
+    $elem = $queue->shift_elem;
+};
+is $@, "failed to read item from blah: foo\n", 'queue empty';
+is scalar(@MockStack), 1, 'one access to memc';
+$call = shift @MockStack;
+is "@$call", 'memcached_get memc blah', 'get the first bulk';
+@MockStack = ();
+
+# read the empty queue again
+eval {
+    $elem = $queue->shift_elem;
+};
+is $@, "failed to read item from blah: foo\n", 'queue empty';
+is scalar(@MockStack), 1, 'one access to memc';
+$call = shift @MockStack;
+is "@$call", 'memcached_get memc blah', 'get the first bulk';
+@MockStack = ();
 
 package Queue::Memcached::Buffered;
 
@@ -193,5 +285,16 @@ sub memcached_free {
 
 sub memcached_set {
     push @::MockStack, ['memcached_set', @_];
+}
+
+sub memcached_get {
+    push @::MockStack, ['memcached_get', @_];
+    return shift @::Queue;
+}
+
+package memc;
+
+sub errstr {
+    'foo';
 }
 
