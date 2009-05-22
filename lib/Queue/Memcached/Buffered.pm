@@ -21,6 +21,17 @@ sub new {
     my $opts = shift || {};
     my $memc = delete $opts->{memc};
     my $servers = delete $opts->{servers};
+    if (!defined $memc && !defined $servers) {
+        die "Neither memc nor servers specified.\n";
+    }
+    my $queue = delete $opts->{queue} or
+        die "No queue name specified.\n";
+    my $item_size = delete $opts->{item_size} or
+        die "No queue item size specified.\n";
+    if (%$opts) {
+        die "Unrecognized option names: ", join(' ', keys %$opts), "\n";
+    }
+
     if (!defined $memc) {
         if ($servers) {
             if (!@$servers) {
@@ -31,25 +42,18 @@ sub new {
             for my $server (@$servers) {
                 my ($host, $port) = split /:/, $server;
                 if (!defined $port) {
+                    memcached_free($memc);
                     die "No port specified in server $server\n";
                 }
                 if ($port !~ /^\d+$/) {
+                    memcached_free($memc);
                     die "Invalid port number \"$port\" in server $server\n";
                 }
                 memcached_server_add($memc, $host, $port);
             }
-        } else {
-            die "Neither memc nor servers specified.\n";
         }
     } elsif (defined $servers) {
         die "servers option not allowed when memc is already specified.\n";
-    }
-    my $queue = delete $opts->{queue} or
-        die "No queue name specified.\n";
-    my $item_size = delete $opts->{item_size} or
-        die "No queue item size specified.\n";
-    if (%$opts) {
-        die "Unrecognized option names: ", join(' ', keys %$opts), "\n";
     }
     #warn "memc: $memc";
     return bless {
@@ -65,19 +69,22 @@ sub new {
 sub push_elem {
     my ($self, $elem) = @_;
     my $task_json = $JsonXs->encode($elem);
+    if (length($task_json) + 2 > $self->{item_size}) {
+        die "single task too big: $task_json\n";
+    }
+
     my $queue = $self->{queue};
     my $flushed = 0;
-    if (length($queue) + length($task_json) + length($self->{write_buf})
+    if (length($queue) + length($task_json) + length($self->{write_buf}) + 1
             > $self->{item_size}) { # clear the buffer
-        if ($self->{write_buf} eq '') {
-            die "single task too big: $task_json\n";
-        }
         $flushed = $self->flush;
+        $self->{write_buf} = '[' . $task_json;
+        return $flushed;
     }
     if ($self->{write_buf} eq '') {
-        $self->{write_buf} = '[' . $self->{write_buf};
+        $self->{write_buf} = '[' . $task_json;
     } else {
-        $self->{write_buf} .= ',' . $self->{write_buf};
+        $self->{write_buf} .= ',' . $task_json;
     }
     $self->{write_buf_elem_count}++;
     return $flushed;

@@ -1,6 +1,5 @@
 [^/]+\.png$
 [^/]+\.dot$
-/bin/bash: k: command not found
 fast.*\.yml$
 \.swp$
 ^a\.yml$
