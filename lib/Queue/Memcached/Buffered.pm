@@ -3,6 +3,8 @@ package Queue::Memcached::Buffered;
 use strict;
 use warnings;
 
+our $VERSION = '0.01';
+
 use JSON::XS;
 use Memcached::libmemcached qw(
     memcached_create
