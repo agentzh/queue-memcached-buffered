@@ -107,6 +107,11 @@ sub shift {
 
 }
 
+sub DESTORY {
+    my $self = shift;
+    $self->flush;
+}
+
 1;
 __END__
 
