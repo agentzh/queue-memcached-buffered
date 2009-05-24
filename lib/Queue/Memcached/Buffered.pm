@@ -135,8 +135,9 @@ sub shift_elem {
     return shift @$elem_list;
 }
 
-sub DESTORY {
+sub DESTROY {
     my $self = shift;
+    #warn "HERE!!!";
     $self->flush;
 }
 

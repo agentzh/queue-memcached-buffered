@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 #use Smart::Comments::JSON '##';
-use Test::More tests => 73;
+use Test::More tests => 77;
 use Test::MockObject;
 
 our @MockStack;
@@ -264,6 +264,26 @@ is scalar(@MockStack), 1, 'one access to memc';
 $call = shift @MockStack;
 is "@$call", 'memcached_get memc blah', 'get the first bulk';
 @MockStack = ();
+
+# test auto-flush
+{
+    my $queue;
+    eval {
+        $queue = Queue::Memcached::Buffered->new({
+            queue     => 'foo',
+            item_size => 1005,
+            servers   => ['localhost:11211'],
+        });
+    };
+    is $@, '', 'no exception thrown';
+    @MockStack = ();
+    $queue->push_elem({value => 32});
+    is scalar(@MockStack), 0, 'should be buffered';
+    @MockStack = ();
+}
+is scalar(@MockStack), 1, 'should be flushed automatically';
+$call = shift @MockStack;
+is "@$call", 'memcached_set memc foo [{"value":32}]', 'auto flushed';
 
 package Queue::Memcached::Buffered;
 
