@@ -8,13 +8,14 @@ author              ('Agent Zhang <agentzh@yahoo.cn>');
 perl_version        ('5.006001');
 all_from            ('lib/Queue/Memcached/Buffered.pm');
 
+install_script            ('bin/readqueue.pl');
+
 requires            ('FindBin');
 requires            ('Memcached::libmemcached' => '0.2101');
 
 build_requires            ('Test::More');
 build_requires            ('Test::MockObject');
 
-#install_script('bin/prefetcher.pl');
 #install_script('bin/cluster-prefetcher.pl');
 
 no_index( directory => qw< t inc doc share demo > );
