@@ -36,7 +36,7 @@ my $qmb = Queue::Memcached::Buffered->new({
 });
 
 my $exported = 0;
-while ($exported < $count and my $elem = $qmb->shift_elem) {
+while ($count == 0 || $exported < $count and my $elem = $qmb->shift_elem) {
     print $json_xs->encode($elem), "\n";
     $exported++;
 }
