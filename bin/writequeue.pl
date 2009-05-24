@@ -56,7 +56,7 @@ sub help {
     my $status = shift;
     my $msg = <<'_EOC_';
 USAGE:
-    readqueue.pl -s <queue-item-size> <queue-name>@<host>:<port> <input-file>...
+    writequeue.pl -s <queue-item-size> <queue-name>@<host>:<port> <input-file>...
 _EOC_
     if ($status == 0) {
         print $msg;

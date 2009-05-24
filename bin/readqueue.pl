@@ -6,7 +6,15 @@ use warnings;
 
 #use Smart::Comments::JSON '##';
 use Queue::Memcached::Buffered;
+use Getopt::Std;
 use JSON::XS;
+
+my %opts;
+getopts('hc:', \%opts) or help(1);
+if ($opts{h}) {
+    help(0);
+}
+my $count = $opts{c} || 0;
 
 my $json_xs = JSON::XS->new->allow_nonref;
 
@@ -27,10 +35,24 @@ my $qmb = Queue::Memcached::Buffered->new({
     item_size => 100,  # dummy
 });
 
-my $count = 0;
-while (my $elem = $qmb->shift_elem) {
+my $exported = 0;
+while ($exported < $count and my $elem = $qmb->shift_elem) {
     print $json_xs->encode($elem), "\n";
-    $count++;
+    $exported++;
 }
-warn "For total $count elements read from the queue \"$qname\" on $server\n";
+warn "For total $exported elements read from the queue \"$qname\" on $server\n";
+
+sub help {
+    my $status = shift;
+    my $msg = <<'_EOC_';
+USAGE:
+    readqueue.pl -c <item-count> <queue-name>@<host>:<port> > <outfile>
+_EOC_
+    if ($status == 0) {
+        print $msg;
+        exit 0;
+    }
+    warn $msg;
+    exit $status;
+}
 
