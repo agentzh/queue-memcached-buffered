@@ -10,6 +10,7 @@ use Memcached::libmemcached qw(
     memcached_create
     memcached_server_add
     memcached_set
+    memcached_get
     memcached_delete
 );
 use Encode qw( _utf8_on _utf8_off );
@@ -119,8 +120,15 @@ sub shift_elem {
     }
     my $queue = $self->{queue};
     my $memc = $self->{memc};
-    my $elem_list_json = memcached_get($memc, $queue) or
-        die "failed to read item from $queue: ", $memc->errstr, "\n";
+    my $elem_list_json = memcached_get($memc, $queue);
+    if (!defined $elem_list_json) {
+        if (defined $memc->errstr && $memc->errstr =~ /NOT FOUND/) {
+            return undef;
+        } else {
+            die "failed to read item from $queue: ", $memc->errstr, "\n";
+        }
+    }
+
     my $elem_list;
     eval {
         $elem_list = $JsonXs->decode($elem_list_json);
