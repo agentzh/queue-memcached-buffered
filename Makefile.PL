@@ -9,6 +9,7 @@ perl_version        ('5.006001');
 all_from            ('lib/Queue/Memcached/Buffered.pm');
 
 install_script            ('bin/readqueue.pl');
+install_script            ('bin/writequeue.pl');
 
 requires            ('FindBin');
 requires            ('Memcached::libmemcached' => '0.2101');
