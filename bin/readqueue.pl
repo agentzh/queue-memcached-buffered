@@ -16,7 +16,7 @@ if ($opts{h}) {
 }
 my $count = $opts{c} || 0;
 
-my $json_xs = JSON::XS->new->allow_nonref;
+my $json_xs = JSON::XS->new->utf8->allow_nonref;
 
 ## @ARGV
 my $queue = shift or
@@ -37,7 +37,9 @@ my $qmb = Queue::Memcached::Buffered->new({
 
 my $exported = 0;
 while (($count == 0 or $exported < $count) and my $elem = $qmb->shift_elem) {
-    print $json_xs->encode($elem), "\n";
+    my $json = $json_xs->encode($elem);
+    Encode::_utf8_off($json);
+    print $json, "\n";
     $exported++;
 }
 warn "For total $exported elements read from the queue \"$qname\" on $server\n";

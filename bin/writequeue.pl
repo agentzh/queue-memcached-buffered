@@ -18,7 +18,7 @@ if (!$opts{s}) {
     die "No queue item sized specified by the option -s <num>.\n";
 }
 
-my $json_xs = JSON::XS->new->allow_nonref;
+my $json_xs = JSON::XS->new->utf8->allow_nonref;
 
 ## @ARGV
 my $queue = shift or
