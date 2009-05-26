@@ -59,6 +59,7 @@ sub new {
     #warn "memc: $memc";
     return bless {
         memc      => $memc,
+        servers   => $servers,
         queue     => $queue,
         item_size => $item_size,
         read_buf  => [],
@@ -141,6 +142,27 @@ sub shift_elem {
     }
     $self->{read_buf} = $elem_list;
     return shift @$elem_list;
+}
+
+sub size {
+    my ($self) = @_;
+    my $servers = $self->{servers};
+    my $queue = $self->{queue};
+
+    my ($size, $max_size);
+    for my $server (@$servers) {
+        next if !$server;
+
+        my ($host, $port) = split /:/, $server;
+        my $out = `echo -n 'stats queue\\r\\nquit\\r\\n' | nc localhost 22201`;
+        if ($out =~ /STAT \Q$queue\E (\d+) (\d+)/ms) {
+            warn $out;
+            $size += $1;
+            $max_size += $2;
+        }
+    }
+
+    return wantarray ? ($size, $max_size) : $size;
 }
 
 sub DESTROY {
