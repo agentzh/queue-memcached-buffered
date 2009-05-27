@@ -154,9 +154,9 @@ sub size {
         next if !$server;
 
         my ($host, $port) = split /:/, $server;
-        my $out = `echo -n 'stats queue\\r\\nquit\\r\\n' | nc localhost 22201`;
+        my $out = `echo -n 'stats queue\\r\\nquit\\r\\n' | nc $host $port`;
         if ($out =~ /STAT \Q$queue\E (\d+) (\d+)/ms) {
-            warn $out;
+            #warn $out;
             $size += $1;
             $max_size += $2;
         }
