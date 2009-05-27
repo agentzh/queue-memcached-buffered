@@ -8,6 +8,8 @@ author              ('Agent Zhang <agentzh@yahoo.cn>');
 perl_version        ('5.006001');
 all_from            ('lib/Queue/Memcached/Buffered.pm');
 
+install_script            ('bin/createqueue.pl');
+install_script            ('bin/deletequeue.pl');
 install_script            ('bin/readqueue.pl');
 install_script            ('bin/writequeue.pl');
 

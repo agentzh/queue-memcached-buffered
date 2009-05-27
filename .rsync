@@ -1,0 +1,7 @@
+#!/bin/sh
+
+rsync -rcv --exclude='Makefile.old' --exclude='.git' \
+    --exclude='*.swp' --exclude='*~' \
+    --exclude='blib' \
+    `pwd` agentzh@bisheng:/data/agentzh/
+
