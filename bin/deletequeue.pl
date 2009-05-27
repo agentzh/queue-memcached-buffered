@@ -12,8 +12,6 @@ use Memcached::libmemcached qw(
 
 my $queue = shift or
     die "No queue specified.\n";
-my $size_limit = shift or
-    die "No size limit specified.\n";
 
 my ($qname, $server);
 if ($queue =~ /^\s*([^\@]+)\@([^:]+:\d+)\s*$/) {
