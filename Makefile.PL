@@ -14,6 +14,7 @@ install_script            ('bin/readqueue.pl');
 install_script            ('bin/writequeue.pl');
 
 requires            ('FindBin');
+requires            ('JSON::XS');
 requires            ('Memcached::libmemcached' => '0.2101');
 
 build_requires            ('Test::More');
