@@ -1,7 +1,17 @@
 #!/bin/sh
 
 rsync -rcv --exclude='Makefile.old' --exclude='.git' \
-    --exclude='*.swp' --exclude='*~' \
+    --exclude='*.swp' --exclude='*~' --exclude='Makefile' \
     --exclude='blib' \
     `pwd` agentzh@bisheng:/data/agentzh/
+
+rsync -rcv --exclude='Makefile.old' --exclude='.git' \
+    --exclude='*.swp' --exclude='*~' --exclude='Makefile' \
+    --exclude='blib' \
+    `pwd` agentz@tq901021.inktomisearch.com:/export/crawlspace/agentz/
+
+rsync -rcv --exclude='Makefile.old' --exclude='.git' \
+    --exclude='*.swp' --exclude='*~' --exclude='Makefile' \
+    --exclude='blib' --exclude='.*' \
+    `pwd` agentz@ws1101.bj1.aliyk.com:~/
 

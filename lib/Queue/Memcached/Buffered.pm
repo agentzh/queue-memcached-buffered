@@ -99,10 +99,9 @@ sub flush {
     }
     my $queue = $self->{queue};
     my $memc = $self->{memc};
-    $self->{write_buf} .= ']';
     ## len: length($tasks_json)
     ## $tasks_json
-    memcached_set($memc, $queue, $self->{write_buf}) or
+    memcached_set($memc, $queue, $self->{write_buf} . ']') or
         die "failed to add item to $queue: ", $memc->errstr, "\n";
     $self->{write_buf_elem_count} = 0;
     $self->{write_buf} = '';
