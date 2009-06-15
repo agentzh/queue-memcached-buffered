@@ -29,6 +29,8 @@ sub new {
         die "No queue name specified.\n";
     my $item_size = delete $opts->{item_size} or
         die "No queue item size specified.\n";
+    my $flush_period = delete $opts->{flush_period};
+
     if (%$opts) {
         die "Unrecognized option names: ", join(' ', keys %$opts), "\n";
     }
@@ -62,6 +64,7 @@ sub new {
         servers   => $servers,
         queue     => $queue,
         item_size => $item_size,
+        flush_period => $flush_period,
         read_buf  => [],
         write_buf => '',
         write_buf_elem_count => 0,
@@ -77,12 +80,28 @@ sub push_elem {
 
     my $queue = $self->{queue};
     my $flushed = 0;
-    if (length($queue) + length($elem_json) + length($self->{write_buf}) + 1
-            > $self->{item_size}) { # clear the buffer
+
+    my $now = time;
+    if (defined $self->{flush_period} &&
+            !defined $self->{flush_time}) {
+        $self->{flush_time} = $now;
+    }
+    if (defined $self->{flush_period} &&
+            $now - $self->{flush_time} >= $self->{flush_period} ) { # clear the buffer
         $flushed = $self->flush;
+        $self->{flush_time} = $now;
         $self->{write_buf} = '[' . $elem_json;
         return $flushed;
     }
+
+    if (length($queue) + length($elem_json) + length($self->{write_buf}) + 1
+            > $self->{item_size}) { # clear the buffer
+        $flushed = $self->flush;
+        $self->{flush_time} = $now;
+        $self->{write_buf} = '[' . $elem_json;
+        return $flushed;
+    }
+
     if ($self->{write_buf} eq '') {
         $self->{write_buf} = '[' . $elem_json;
     } else {
