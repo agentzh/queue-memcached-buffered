@@ -1,3 +1,6 @@
 version 0.02
 - initial release
 
+version 0.04
+- added a flush_period option (xunxin)
+
