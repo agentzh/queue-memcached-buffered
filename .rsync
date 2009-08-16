@@ -3,7 +3,7 @@
 rsync -rcv --exclude='Makefile.old' --exclude='.git' \
     --exclude='*.swp' --exclude='*~' --exclude='Makefile' \
     --exclude='blib' \
-    `pwd` agentzh@bisheng:/data/agentzh/
+    `pwd` agentz@bisheng:/data/agentzh/
 
 rsync -rcv --exclude='Makefile.old' --exclude='.git' \
     --exclude='*.swp' --exclude='*~' --exclude='Makefile' \
