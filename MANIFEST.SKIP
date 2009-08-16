@@ -1,6 +1,8 @@
 [^/]+\.png$
 [^/]+\.dot$
 fast.*\.yml$
+.*\.txt$
+\.rsync$
 \.swp$
 ^a\.yml$
 ^baz\.yml$

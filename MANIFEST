@@ -1,3 +1,8 @@
+bin/createqueue.pl
+bin/deletequeue.pl
+bin/readqueue.pl
+bin/writequeue.pl
+Changes
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
@@ -7,11 +12,14 @@ inc/Module/Install/Fetch.pm
 inc/Module/Install/Include.pm
 inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
+inc/Module/Install/Scripts.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/Queue/Memcached/Buffered.pm
-bin/readqueue.pl
 Makefile.PL
 MANIFEST			This list of files
 MANIFEST.SKIP
 META.yml
+t/pod-coverage.t
+t/pod.t
+t/sanity.t
