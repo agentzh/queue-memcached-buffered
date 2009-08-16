@@ -2,6 +2,7 @@
 *.json
 *.o
 *.hi
+*.txt
 a.png
 b.png
 bar.dot

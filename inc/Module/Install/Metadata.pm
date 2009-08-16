@@ -2,17 +2,18 @@
 package Module::Install::Metadata;
 
 use strict 'vars';
-use Module::Install::Base ();
+use Module::Install::Base;
 
 use vars qw{$VERSION @ISA $ISCORE};
 BEGIN {
-	$VERSION = '0.90';
-	@ISA     = 'Module::Install::Base';
+	$VERSION = '0.82';
+	@ISA     = qw{Module::Install::Base};
 	$ISCORE  = 1;
 }
 
 my @boolean_keys = qw{
 	sign
+	mymeta
 };
 
 my @scalar_keys = qw{
@@ -439,21 +440,21 @@ sub license_from {
 	/ixms ) {
 		my $license_text = $1;
 		my @phrases      = (
-			'under the same (?:terms|license) as (?:perl|the perl programming language) itself' => 'perl', 1,
-			'GNU general public license'         => 'gpl',         1,
-			'GNU public license'                 => 'gpl',         1,
-			'GNU lesser general public license'  => 'lgpl',        1,
-			'GNU lesser public license'          => 'lgpl',        1,
-			'GNU library general public license' => 'lgpl',        1,
-			'GNU library public license'         => 'lgpl',        1,
-			'BSD license'                        => 'bsd',         1,
-			'Artistic license'                   => 'artistic',    1,
-			'GPL'                                => 'gpl',         1,
-			'LGPL'                               => 'lgpl',        1,
-			'BSD'                                => 'bsd',         1,
-			'Artistic'                           => 'artistic',    1,
-			'MIT'                                => 'mit',         1,
-			'proprietary'                        => 'proprietary', 0,
+			'under the same (?:terms|license) as perl itself' => 'perl',        1,
+			'GNU general public license'                      => 'gpl',         1,
+			'GNU public license'                              => 'gpl',         1,
+			'GNU lesser general public license'               => 'lgpl',        1,
+			'GNU lesser public license'                       => 'lgpl',        1,
+			'GNU library general public license'              => 'lgpl',        1,
+			'GNU library public license'                      => 'lgpl',        1,
+			'BSD license'                                     => 'bsd',         1,
+			'Artistic license'                                => 'artistic',    1,
+			'GPL'                                             => 'gpl',         1,
+			'LGPL'                                            => 'lgpl',        1,
+			'BSD'                                             => 'bsd',         1,
+			'Artistic'                                        => 'artistic',    1,
+			'MIT'                                             => 'mit',         1,
+			'proprietary'                                     => 'proprietary', 0,
 		);
 		while ( my ($pattern, $license, $osi) = splice(@phrases, 0, 3) ) {
 			$pattern =~ s{\s+}{\\s+}g;
@@ -510,13 +511,12 @@ sub requires_from {
 # Also, convert double-part versions (eg, 5.8)
 sub _perl_version {
 	my $v = $_[-1];
-	$v =~ s/^([1-9])\.([1-9]\d?\d?)$/sprintf("%d.%03d",$1,$2)/e;
+	$v =~ s/^([1-9])\.([1-9]\d?\d?)$/sprintf("%d.%03d",$1,$2)/e;	
 	$v =~ s/^([1-9])\.([1-9]\d?\d?)\.(0|[1-9]\d?\d?)$/sprintf("%d.%03d%03d",$1,$2,$3 || 0)/e;
 	$v =~ s/(\.\d\d\d)000$/$1/;
 	$v =~ s/_.+$//;
 	if ( ref($v) ) {
-		# Numify
-		$v = $v + 0;
+		$v = $v + 0; # Numify
 	}
 	return $v;
 }
@@ -526,56 +526,21 @@ sub _perl_version {
 
 
 ######################################################################
-# MYMETA Support
+# MYMETA.yml Support
 
 sub WriteMyMeta {
 	die "WriteMyMeta has been deprecated";
 }
 
-sub write_mymeta_yaml {
+sub write_mymeta {
 	my $self = shift;
+	
+	# If there's no existing META.yml there is nothing we can do
+	return unless -f 'META.yml';
 
 	# We need YAML::Tiny to write the MYMETA.yml file
 	unless ( eval { require YAML::Tiny; 1; } ) {
 		return 1;
-	}
-
-	# Generate the data
-	my $meta = $self->_write_mymeta_data or return 1;
-
-	# Save as the MYMETA.yml file
-	print "Writing MYMETA.yml\n";
-	YAML::Tiny::DumpFile('MYMETA.yml', $meta);
-}
-
-sub write_mymeta_json {
-	my $self = shift;
-
-	# We need JSON to write the MYMETA.json file
-	unless ( eval { require JSON; 1; } ) {
-		return 1;
-	}
-
-	# Generate the data
-	my $meta = $self->_write_mymeta_data or return 1;
-
-	# Save as the MYMETA.yml file
-	print "Writing MYMETA.json\n";
-	Module::Install::_write(
-		'MYMETA.json',
-		JSON->new->pretty(1)->canonical->encode($meta),
-	);
-}
-
-sub _write_mymeta_data {
-	my $self = shift;
-
-	# If there's no existing META.yml there is nothing we can do
-	return undef unless -f 'META.yml';
-
-	# We need Parse::CPAN::Meta to load the file
-	unless ( eval { require Parse::CPAN::Meta; 1; } ) {
-		return undef;
 	}
 
 	# Merge the perl version into the dependencies
@@ -593,7 +558,7 @@ sub _write_mymeta_data {
 	}
 
 	# Load the advisory META.yml file
-	my @yaml = Parse::CPAN::Meta::LoadFile('META.yml');
+	my @yaml = YAML::Tiny::LoadFile('META.yml');
 	my $meta = $yaml[0];
 
 	# Overwrite the non-configure dependency hashs
@@ -607,7 +572,9 @@ sub _write_mymeta_data {
 		$meta->{build_requires} = { map { @$_ } @{ $val->{build_requires} } };
 	}
 
-	return $meta;
+	# Save as the MYMETA.yml file
+	print "Writing MYMETA.yml\n";
+	YAML::Tiny::DumpFile('MYMETA.yml', $meta);	
 }
 
 1;

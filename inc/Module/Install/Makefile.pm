@@ -2,14 +2,14 @@
 package Module::Install::Makefile;
 
 use strict 'vars';
-use ExtUtils::MakeMaker   ();
-use Module::Install::Base ();
+use Module::Install::Base;
+use ExtUtils::MakeMaker ();
 
-use vars qw{$VERSION @ISA $ISCORE};
+use vars qw{$VERSION $ISCORE @ISA};
 BEGIN {
-	$VERSION = '0.90';
-	@ISA     = 'Module::Install::Base';
+	$VERSION = '0.82';
 	$ISCORE  = 1;
+	@ISA     = qw{Module::Install::Base};
 }
 
 sub Makefile { $_[0] }

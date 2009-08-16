@@ -1,0 +1,48 @@
+NAME
+    Queue::Memcached::Buffered - buffered queue API with read/write buffers
+
+SYNOPSIS
+        use Queue::Memcached::Buffered;
+
+        my $queue = Queue::Memcached::Buffered->new({
+            # or use memc => $memcached_object below:
+            servers => ['127.0.0.1:11211', 'foo.bar.com:12345'],
+            item_size => 1005,
+            queue => 'queue_name',
+        });
+        for my $elem (@elems) {
+            $queue->push_elem($elem);
+        }
+        $queue->flush; # don't forget this!
+
+        while (my $elem = $queue->shift_elem) {
+            # do something with $elem here...
+        }
+
+DIAGNOSTICS
+    Queue::Memcached::Buffered throw exceptions when error occurs. Here's
+    the list of the common error messages:
+
+    failed to add item to <queue>: <memcached errstr>
+        The "push_elem" method fails to push the JSON item to the remote
+        memcached queue server. The raw error messages would be given at the
+        end.
+
+    failed to read item from <queue>: <memcached errstr>
+        The "shift_elem" method fails to get a defined and non-empty JSON
+        item from the remote memcached queue server. The raw error messages
+        would be given at the end.
+
+    failed to parse JSON <json_string>: <errors from JSON::XS>
+        The server returns invalid JSON item and the "shift_elem" method
+        cannot parse it with JSON::XS. The original error messages from
+        JSON::XS is given at the end.
+
+    invalid array returned from the server: <json string>
+        The memcached queue server returns a valid JSON string but it's not
+        a JSON array as a whole, but JSON object, strings, numerals, or
+        booleans.
+
+AUTHOR
+    Agent Zhang (agentzh) "<agentzh@yahoo.cn>"
+
